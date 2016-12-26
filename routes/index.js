@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
- 
+
 //var auth = require('./auth.js');
 //var products = require('./products.js');
 //var user = require('./users.js');
@@ -31,12 +31,12 @@ router.post('/api/v1/admin/user/', user.create);
 router.put('/api/v1/admin/user/:id', user.update);
 router.delete('/api/v1/admin/user/:id', user.delete);
 */
-
-
+ 
 
 router.get('/', function (request, response) {
   response.send("<h1>Welcome to our Nodejs server!<h/1>");
 });
+
 
 //add new user to db
 router.get('/add', function (request, response) {

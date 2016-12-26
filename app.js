@@ -1,6 +1,8 @@
 const MongoClient = require('mongodb').MongoClient;
 const express = require('express');
 const routes = require('./routes');
+const userRoutes = require('./routes/user');
+const lyricRoutes = require('./routes/lyric');
 const app = express();
 
 var morgan   = require('morgan');  // log requests to the console (express4)
@@ -9,7 +11,8 @@ var mongoose = require('mongoose');              // mongoose for mongodb
 var database = require('./config/database');
 var log = require('./config/log');
 
-var db;
+
+//var db;
  
 // Start the server
 app.set('port', process.env.PORT || 3000);
@@ -34,11 +37,13 @@ app.all('/*', function(req, res, next) {
 
 //app.all('/api/v1/*', [require('./middlewares/validateRequest')]);
 
-
-//middleware calls 
-app.use('/', routes);   //define routes
 app.use(morgan('combined', {stream: log.accessLogStream})); // log requests to the console
 app.use(bodyParser.json());  // parse application/json
+
+app.use('/', routes);   //define routes for http://localhost/
+app.use('/user', userRoutes);   //define routes for http://localhost/user/
+app.use('/lyric', lyricRoutes);   //define routes for http://localhost/lyric/
+
 
 // If no route is matched by now, it must be a 404
 app.use(function(req, res, next) {
@@ -47,8 +52,12 @@ app.use(function(req, res, next) {
   next(err);
 });
 
-mongoose.connect(database.url);  
+var server = app.listen(app.get('port'), function() {
+  console.log('Express server listening on port ' + server.address().port);
+});
 
+
+/*
 
 MongoClient.connect(database.url, (err, database) => {
     if (err) {
@@ -59,10 +68,7 @@ MongoClient.connect(database.url, (err, database) => {
 
     db = database;
 
-    var server = app.listen(app.get('port'), function() {
-      console.log('Express server listening on port ' + server.address().port);
-    });
           
-});
+});*/
 
 

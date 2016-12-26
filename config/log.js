@@ -1,3 +1,5 @@
+'use strict';
+
 var FileStreamRotator = require('file-stream-rotator');  //used for morgan to create log file everyday
 var fs = require('fs');   //file system
 
