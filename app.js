@@ -1,19 +1,17 @@
-const MongoClient = require('mongodb').MongoClient;
 const express = require('express');
 const routes = require('./routes');
-const userRoutes = require('./routes/user');
-const lyricRoutes = require('./routes/lyric');
+const localization = require('./libs/localization');
 const app = express();
-
+const jwt = require('jsonwebtoken');
+var Localize = require('localize'); //string localization library
 var morgan   = require('morgan');  // log requests to the console (express4)
 var bodyParser = require('body-parser');         // pull information from HTML POST (express4)
 var mongoose = require('mongoose');              // mongoose for mongodb 
-var database = require('./config/database');
-var log = require('./config/log');
+var configs = require('./configs');
+var connectionString = configs.Database.url + configs.Database.name;
+mongoose.Promise = require('bluebird'); //avoid mongoose deprecated promises error
+mongoose.connect(connectionString);
 
-
-//var db;
- 
 // Start the server
 app.set('port', process.env.PORT || 3000);
 
@@ -37,13 +35,37 @@ app.all('/*', function(req, res, next) {
 
 //app.all('/api/v1/*', [require('./middlewares/validateRequest')]);
 
-app.use(morgan('combined', {stream: log.accessLogStream})); // log requests to the console
+app.use(morgan('combined', {stream: configs.Log.accessLogStream})); // log requests to the console
 app.use(bodyParser.json());  // parse application/json
 
-app.use('/', routes);   //define routes for http://localhost/
-app.use('/user', userRoutes);   //define routes for http://localhost/user/
-app.use('/lyric', lyricRoutes);   //define routes for http://localhost/lyric/
+app.use('/user', routes.User);   //define routes for http://localhost/user/
+app.use('/lyric', routes.Lyric);   //define routes for http://localhost/lyric/
 
+/*
+app.use(function(request, response, next) {
+        var lang = request.session.lang || "en";
+        Localize.setLocale(settings.defaultLanguage);
+        next();
+});*/
+
+/*
+Check why a user is unathorized and return response based on that.
+@return error 406 if user has an expired access token, and 401 if the user is not signed in at all (no token presented).
+*/
+app.use(function (err, req, res, next) {
+    if (err.name === 'UnauthorizedError') {
+      if(req.body.accessToken){   //user has access token
+          jwt.verify(req.body.accessToken, configs.Settings.authenticationTokenSecretKey, function(err, decoded) {
+            if (err && err.name == 'TokenExpiredError') { // it should
+              return routes.Common.jsonResponse(res, 406, false); //not acceptable, to indicate that new access token needed.
+            }          
+          });
+      }
+      
+      //user is not singed in at all (no access token was sent)
+      return routes.Common.jsonResponse(res, 401, false, [localization.translate("userNotAuthenticatedErr")]);
+    }
+});
 
 // If no route is matched by now, it must be a 404
 app.use(function(req, res, next) {

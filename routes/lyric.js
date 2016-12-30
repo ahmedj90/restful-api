@@ -1,7 +1,7 @@
 var express = require('express');
-var settings = require(__dirname + '/../config/settings');
+var configs = require(__dirname + '/../configs');
 const expressJwt = require('express-jwt');   
-const authenticate = expressJwt({secret : settings.authenticationTokenSecretKey});
+const authenticate = expressJwt({secret : configs.Settings.authenticationTokenSecretKey});
 
 var router = express.Router();
 
